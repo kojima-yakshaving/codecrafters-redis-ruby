@@ -7,10 +7,10 @@ class YourRedisServer
 
   def start
     server = TCPServer.new(@port)
-    client = server.accept
-    until client.eof?
-      client.gets
-      client.write("+PONG\r\n")
+    while (client = server.accept)
+      until client.eof?
+        client.write("+PONG\r\n") if client.gets.chomp == 'PING'
+      end
     end
     client.close
   end
