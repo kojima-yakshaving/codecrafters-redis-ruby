@@ -21,9 +21,11 @@ class YourRedisServer
 end
 
 
-class RedisConnection
+class RedisConnection 
+
   def initialize(session)
     @session = session
+    @@data ||= {}
   end
 
   def execute_command
@@ -33,6 +35,18 @@ class RedisConnection
       writeline("$#{body.size}\r\n#{body}\r\n")
     elsif command == "PING"
       writeline("+PONG\r\n")
+    elsif command == 'GET'
+      key, *_ = params
+      value = @@data[key]
+      if value.empty?
+        writeline("$-1\r\n")
+      else 
+        writeline("$#{value.size}\r\n#{value}\r\n")
+      end
+    elsif command == 'SET'
+      key, value = params
+      @@data[key] = value
+      writeline("+OK\r\n")
     end
   end
 
@@ -55,7 +69,7 @@ class RedisConnection
     argv = []
     args_count.times do 
       _ = readline
-      argv << readline
+      argv << readline.chomp
     end
 
     argv
